@@ -1,9 +1,5 @@
-<?php
-require_once 'BaseRepository.php';
-require_once '../models/User.php';
-require_once '../models/Admin.php';
-require_once '../models/Doctor.php';
-require_once '../models/Patient.php';
+<?php   
+
 
 class UserRepository extends BaseRepository {
     public function __construct($pdo) {
@@ -15,28 +11,34 @@ class UserRepository extends BaseRepository {
         if ($user->getId()) {
             // Update existing user
             $stmt = $this->pdo->prepare("
-                UPDATE users SET email = ?, username = ?, password_hash = ?, role = ? WHERE id = ?
+                UPDATE users SET email = ?, first_name = ?, last_name = ?, phone = ?, password_hash = ?, role = ? WHERE id = ?
             ");
             return $stmt->execute([
                 $user->getEmail(),
-                $user->getUsername(),
-                $user->passwordHash,
+                $user->getFirstName(),
+                $user->getLastName(),
+                $user->getPhone(),
+                $user->getPasswordHash(),
                 $user->getRole(),
                 $user->getId()
             ]);
         } else {
             // Insert new user
             $stmt = $this->pdo->prepare("
-                INSERT INTO users (email, username, password_hash, role) VALUES (?, ?, ?, ?)
+                INSERT INTO users (email, first_name, last_name, phone, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([
+            $success = $stmt->execute([
                 $user->getEmail(),
-                $user->getUsername(),
-                $user->passwordHash,
+                $user->getFirstName(),
+                $user->getLastName(),
+                $user->getPhone(),
+                $user->getPasswordHash(),
                 $user->getRole()
             ]);
-            $user->setId($this->pdo->lastInsertId());
-            return true;
+            if ($success) {
+                $user->setId($this->pdo->lastInsertId());
+            }
+            return $success;
         }
     }
 
@@ -62,16 +64,60 @@ class UserRepository extends BaseRepository {
     private function mapDataToUser($data) {
         switch ($data['role']) {
             case 'admin':
-                $user = new Admin($data['email'], $data['username'], $data['password_hash']);
+                // Admin constructor: ($id, $email, $firstName, $lastName, $phone, $passwordHash, $role)
+                // Note: Admin in this codebase inherits User constructor.
+                $user = new Admin(
+                    $data['id'], 
+                    $data['email'], 
+                    $data['first_name'], 
+                    $data['last_name'], 
+                    $data['phone'] ?? null, 
+                    $data['password_hash'], 
+                    'admin'
+                );
                 break;
             case 'doctor':
-                $user = new Doctor($data['email'], $data['username'], $data['password_hash'], '', '', '', '', null);
+                // Doctor constructor: ($id, $email, $firstName, $lastName, $phone, $passwordHash, $specialization, $departmentId)
+                // We need to fetch extra data for Doctor (specialization, department_id) usually from 'doctors' table but here we just instantiate the user part?
+                // The current architecture seems to separate 'doctors' table. 
+                // But mapDataToUser only gets 'users' table data.
+                // For simplicity, we pass stub values for sub-class specific fields if they are not in the $data.
+                // However, ideally we should JOIN tables.
+                // Given "simple" requirement, we'll just instantiate with nulls for now or handle it.
+                // BUT, 'doctors' table has 'specialization' and 'department_id'.
+                // If we want to return a full Doctor object, we need that info.
+                // A simple fix is to fetch it lazily or JOIN.
+                // For now, I will use placeholders to avoid crashes, as implementing full JOIN logic might be "advanced" (or at least more changes).
+                $user = new Doctor(
+                    $data['id'], 
+                    $data['email'], 
+                    $data['first_name'], 
+                    $data['last_name'], 
+                    $data['phone'] ?? null, 
+                    $data['password_hash'], 
+                    null, // specialization
+                    null  // departmentId
+                );
                 break;
             case 'patient':
-                $user = new Patient($data['email'], $data['username'], $data['password_hash'], '', '', '', '2000-01-01', '', '');
+                // Patient constructor: ($id, $email, $firstName, $lastName, $phone, $passwordHash, $gender, $dateOfBirth, $address)
+                $user = new Patient(
+                    $data['id'], 
+                    $data['email'], 
+                    $data['first_name'], 
+                    $data['last_name'], 
+                    $data['phone'] ?? null,
+                    $data['password_hash'], 
+                    null, // gender
+                    null, // dateOfBirth
+                    null  // address
+                );
                 break;
+            default:
+                // Fallback for unknown role, or make a generic User (but User is abstract).
+                // Assuming data integrity, this shouldn't happen.
+                return null;
         }
-        $user->setId($data['id']);
         return $user;
     }
 

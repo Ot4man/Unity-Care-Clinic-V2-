@@ -1,6 +1,4 @@
 <?php
-require_once 'BaseRepository.php';
-require_once '../models/Medication.php';
 
 class MedicationRepository extends BaseRepository {
     public function __construct($pdo) {

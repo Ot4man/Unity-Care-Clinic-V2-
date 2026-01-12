@@ -1,6 +1,4 @@
-<?php
-require_once 'BaseRepository.php';
-require_once '../models/Doctor.php';
+<?php 
 
 class DoctorRepository extends BaseRepository {
     public function __construct($pdo) {
@@ -11,7 +9,7 @@ class DoctorRepository extends BaseRepository {
     public function save(Doctor $doctor) {
         if ($doctor->getId()) {
             $stmt = $this->pdo->prepare("
-                UPDATE doctors SET spicialization = ?, department_id = ? WHERE id = ?
+                UPDATE doctors SET specialization = ?, department_id = ? WHERE id = ?
             ");
             return $stmt->execute([
                 $doctor->getSpecialization(),
@@ -20,7 +18,7 @@ class DoctorRepository extends BaseRepository {
             ]);
         } else {
             $stmt = $this->pdo->prepare("
-                INSERT INTO doctors (id, spicialization, department_id) VALUES (?, ?, ?)
+                INSERT INTO doctors (id, specialization, department_id) VALUES (?, ?, ?)
             ");
             return $stmt->execute([
                 $doctor->getId(),
@@ -38,6 +36,15 @@ class DoctorRepository extends BaseRepository {
 
     public function findAll() {
         $stmt = $this->pdo->query("SELECT * FROM doctors");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findAllWithUserInfo() {
+        $stmt = $this->pdo->query("
+            SELECT u.first_name, u.last_name, u.email, u.phone, d.* 
+            FROM doctors d
+            JOIN users u ON d.id = u.id
+        ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

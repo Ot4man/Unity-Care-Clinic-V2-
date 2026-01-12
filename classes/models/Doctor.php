@@ -1,6 +1,6 @@
 <?php
 
-require_once "User.php";
+
 
 class Doctor extends User
 {
@@ -12,11 +12,12 @@ class Doctor extends User
         $email,
         $firstName,
         $lastName,
+        $phone,
         $passwordHash,
         $specialization,
         $departmentId
     ) {
-        parent::__construct($id, $email, $firstName, $lastName, $passwordHash, "doctor");
+        parent::__construct($id, $email, $firstName, $lastName, $phone, $passwordHash, "doctor");
 
         $this->specialization = $specialization;
         $this->departmentId = $departmentId;
@@ -31,5 +32,10 @@ class Doctor extends User
     {
         return $this->specialization;
     }
-     public function getId() { return $this->id; }
+    public function getId() { return $this->id; }
+
+    public function getDepartmentId()
+    {
+        return $this->departmentId;
+    }
 }

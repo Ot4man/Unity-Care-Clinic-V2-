@@ -1,6 +1,6 @@
 <?php
 
-require_once "User.php";
+
 
 class Patient extends User
 {
@@ -13,12 +13,13 @@ class Patient extends User
         $email,
         $firstName,
         $lastName,
+        $phone,
         $passwordHash,
         $gender,
         $dateOfBirth,
         $address
     ) {
-        parent::__construct($id, $email, $firstName, $lastName, $passwordHash, "patient");
+        parent::__construct($id, $email, $firstName, $lastName, $phone, $passwordHash, "patient");
 
         $this->gender = $gender;
         $this->dateOfBirth = $dateOfBirth;
@@ -29,4 +30,9 @@ class Patient extends User
     {
         return "patient";
     }
+
+    public function getGender() { return $this->gender; }
+    public function getDateOfBirth() { return $this->dateOfBirth; }
+    public function getAddress() { return $this->address; }
+    public function getId() { return $this->id; }
 }

@@ -1,6 +1,4 @@
 <?php
-require_once 'BaseRepository.php';
-require_once '../models/Prescription.php';
 
 class PrescriptionRepository extends BaseRepository {
     public function __construct($pdo) {
@@ -49,6 +47,19 @@ class PrescriptionRepository extends BaseRepository {
     public function findByPatient($patientId) {
         $stmt = $this->pdo->prepare("SELECT * FROM prescriptions WHERE patient_id = ?");
         $stmt->execute([$patientId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getTopMedications($limit = 5) {
+        $stmt = $this->pdo->prepare("
+            SELECT m.name, COUNT(p.id) as count
+            FROM prescriptions p
+            JOIN medications m ON p.medication_id = m.id
+            GROUP BY p.medication_id
+            ORDER BY count DESC
+            LIMIT :limit
+        ");
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
